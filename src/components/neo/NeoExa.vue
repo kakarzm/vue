@@ -1,158 +1,118 @@
 <template>
-  <div style="margin-top: 10px" v-loading="fullloading">
-    <div style="margin-bottom: 10px;display: flex;justify-content: center;align-items: center">
-      <el-input
-        placeholder="默认展示部分用户，可以通过用户名搜索更多用户..."
-        prefix-icon="el-icon-search"
-        size="small"
-        style="width: 400px;margin-right: 10px"
-        v-model="keywords">
-      </el-input>
-      <el-button size="small" type="primary" icon="el-icon-search" @click="searchClick">搜索</el-button>
+  <div class="table">
+    <div class="crumbs">
+      <el-breadcrumb separator="/">
+        <el-breadcrumb-item><i class="el-icon-menu"></i> Neo4j数据</el-breadcrumb-item>
+        <el-breadcrumb-item>节点</el-breadcrumb-item>
+      </el-breadcrumb>
+    </div>
+    <div style="margin-bottom:10px;">
+      当前数据库中共有节点{{nodeCount}}个
+    </div>
+    <div class="handle-box">
+      <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
+      <el-button type="primary" icon="search" @click="search">搜索</el-button>
+    </div>
+    <el-table :data="tableData" border style="width: 100%" >
+      <el-table-column prop="id" label="id" sortable width="150">
+      </el-table-column>
+      <el-table-column prop="labels" label="标签" width="150">
+      </el-table-column>
+      <el-table-column prop="pkey" label="属性" width="150">
+      </el-table-column>
+      <el-table-column prop="pvalue" label="值" width="150">
+      </el-table-column>
+    </el-table>
+    <div class="pagination">
+      <el-pagination
+        @current-change ="handleCurrentChange"
+        layout="prev, pager, next"
+        :total="1000">
+      </el-pagination>
     </div>
   </div>
+
 </template>
 <script>
 export default{
   data () {
     return {
-      keywords: '',
-      fullloading: false,
-      hrs: [],
-      cardLoading: [],
-      eploading: [],
-      allRoles: [],
-      moreBtnState: false,
-      selRoles: [],
-      selRolesBak: []
+      nodeCount: '',
+      url: 'static/vuetable.json',
+      tableData: [],
+      cur_page: 1,
+      multipleSelection: [],
+      select_cate: '',
+      select_word: '',
+      del_list: [],
+      is_search: false
     }
   },
+  created: function () {
+    this.getData()
+  },
   mounted: function () {
+    this.initCount()
+  },
+  computed: {
+    data () {
+      const self = this
+      return self.tableData.filter(function (d) {
+        let isDel = false
+        for (let i = 0; i < self.del_list.length; i++) {
+          if (d.name === self.del_list[i].name) {
+            isDel = true
+            break
+          }
+        }
+        if (!isDel) {
+          if (d.address.indexOf(self.select_cate) > -1 && (d.name.indexOf(self.select_word) > -1 ||
+              d.address.indexOf(self.select_word) > -1)
+          ) {
+            return d
+          }
+        }
+      })
+    }
   },
   methods: {
-    searchClick () {
-      this.initCards()
-      this.loadAllRoles()
-    },
-    updateHrRoles (hrId, index) {
-      this.moreBtnState = false
-      var _this = this
-      if (this.selRolesBak.length === this.selRoles.length) {
-        for (var i = 0; i < this.selRoles.length; i++) {
-          for (var j = 0; j < this.selRolesBak.length; j++) {
-            if (this.selRoles[i] === this.selRolesBak[j]) {
-              this.selRolesBak.splice(j, 1)
-              break
-            }
-          }
-        }
-        if (this.selRolesBak.length === 0) {
-          return
-        }
-      }
-      this.eploading.splice(index, 1, true)
-      this.putRequest('/system/hr/roles', {
-        hrId: hrId,
-        rids: this.selRoles
-      }).then(resp => {
-        _this.eploading.splice(index, 1, false)
+    initCount () {
+      this.getRequest('/neoexa/count').then(resp => {
         if (resp && resp.status === 200) {
-          var data = resp.data
-          _this.$message({type: data.status, message: data.msg})
-          if (data.status === 'success') {
-            _this.refreshHr(hrId, index)
-          }
+          this.nodeCount = resp.data.nodeCount
         }
       })
     },
-    refreshHr (hrId, index) {
-      var _this = this
-      _this.cardLoading.splice(index, 1, true)
-      this.putRequest('/system/hr/id/' + hrId).then(resp => {
-        _this.cardLoading.splice(index, 1, false)
-        _this.hrs.splice(index, 1, resp.data)
-      })
+    handleCurrentChange (val) {
+      this.cur_page = val
+      this.getData()
     },
-    loadSelRoles (hrRoles, index) {
-      this.moreBtnState = true
-      this.selRoles = []
-      this.selRolesBak = []
-      hrRoles.forEach(role => {
-        this.selRoles.push(role.id)
-        this.selRolesBak.push(role.id)
-      })
-    },
-    loadAllRoles () {
-      var _this = this
-      this.getRequest('/system/basic/roles').then(resp => {
-        _this.fullloading = false
+    getData () {
+      this.getRequest('/neoexa/nodes').then(resp => {
         if (resp && resp.status === 200) {
-          _this.allRoles = resp.data
+          this.tableData = resp.data.list
+          alert(JSON.stringify(resp.data.list))
         }
       })
+      // this.$axios.get(this.url, {page: this.cur_page}).then((res) => {
+      //   this.tableData = res.data.list
+      // })
     },
-    switchChange (newValue, hrId, index) {
-      var _this = this
-      _this.cardLoading.splice(index, 1, true)
-      this.putRequest('/system/hr/', {
-        enabled: newValue,
-        id: hrId
-      }).then(resp => {
-        _this.cardLoading.splice(index, 1, false)
-        if (resp && resp.status === 200) {
-          var data = resp.data
-          _this.$message({type: data.status, message: data.msg})
-          if (data.status === 'error') {
-            _this.refreshHr(hrId, index)
-          }
-        } else {
-          _this.refreshHr(hrId, index)
-        }
-      })
-    },
-    initCards () {
-      this.fullloading = true
-      var _this = this
-      let searchWords
-      if (this.keywords === '') {
-        searchWords = 'all'
-      } else {
-        searchWords = this.keywords
-      }
-      this.getRequest('/system/hr/' + searchWords).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.hrs = resp.data
-          let length = resp.data.length
-          _this.cardLoading = Array.apply(null, Array(length)).map(function (item, i) {
-            return false
-          })
-          _this.eploading = Array.apply(null, Array(length)).map(function (item, i) {
-            return false
-          })
-        }
-      })
-    },
-    deleteHr (hrId) {
-      var _this = this
-      this.fullloading = true
-      this.deleteRequest('/system/hr/' + hrId).then(resp => {
-        _this.fullloading = false
-        if (resp && resp.status === 200) {
-          var data = resp.data
-          _this.$message({type: data.status, message: data.msg})
-          if (data.status === 'success') {
-            _this.initCards()
-            _this.loadAllRoles()
-          }
-        }
-      })
+    search () {
+      this.is_search = true
     }
   }
 }
 </script>
 <style>
-  .user-info {
-    font-size: 12px;
-    color: #09c0f6;
+  .handle-box{
+    margin-bottom: 20px;
+  }
+  .handle-select{
+    width: 120px;
+  }
+  .handle-input{
+    width: 300px;
+    display: inline-block;
   }
 </style>
