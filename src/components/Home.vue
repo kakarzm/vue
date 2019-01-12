@@ -3,7 +3,7 @@
     <el-container  style="height:100%" direction="vertical">
       <!--<el-container style="height:650px;">-->
       <el-header   class="header">
-        <div class="logo">专业知识图谱</div>
+        <div class="logo">培养方案</div>
         <div class="title">
           <el-menu
             :default-active="activeIndex2"
