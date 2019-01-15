@@ -54,8 +54,8 @@ export const formatRoutes = (routes) => {
           require(['../components/statistics/' + component + '.vue'], resolve)
         } else if (component.startsWith('Sys')) {
           require(['../components/system/' + component + '.vue'], resolve)
-        } else if (component.startsWith('Neo')) {
-          require(['../components/neo/' + component + '.vue'], resolve)
+        } else if (component.startsWith('Mgr')) {
+          require(['../components/management/' + component + '.vue'], resolve)
         }
       },
       name: name,
