@@ -56,6 +56,8 @@ export const formatRoutes = (routes) => {
           require(['../components/system/' + component + '.vue'], resolve)
         } else if (component.startsWith('Mgr')) {
           require(['../components/management/' + component + '.vue'], resolve)
+        } else if (component.startsWith('Basic')) {
+          require(['../components/basic/' + component + '.vue'], resolve)
         }
       },
       name: name,

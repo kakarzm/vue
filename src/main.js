@@ -32,11 +32,11 @@ Vue.prototype.putRequest = putRequest
 Vue.prototype.isNotNullORBlank = isNotNullORBlank
 
 router.beforeEach((to, from, next) => {
-  Notification.success({
-    title: '路由跳转',
-    message: from.name + '-->' + to.name,
-    type: 'success'
-  })
+  // Notification.success({
+  //   title: '路由跳转',
+  //   message: from.name + '-->' + to.name,
+  //   type: 'success'
+  // })
   if (to.name === 'Login') {
     next()
     return
