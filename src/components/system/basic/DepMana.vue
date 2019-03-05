@@ -173,7 +173,7 @@ export default {
       }
     },
     renderContent (h, {node, data, store}) {
-      return (
+      return (`
         <span style="flex: 1; display: flex; align-items: center; justify-content: space-between; font-size: 14px; padding-right: 8px;">
           <span>
             <span>{node.label}</span>
@@ -182,7 +182,7 @@ export default {
             <el-button style="font-size: 12px;" type="primary" size="mini" style="padding:3px" on-click={() => this.showAddDepView(data, event) }>添加部门</el-button>
             <el-button style="font-size: 12px;" type="danger" size="mini" style="padding:3px" on-click={() => this.deleteDep(data, event) }>删除部门</el-button>
           </span>
-        </span>)
+        </span>`)
     }
   }
 }
