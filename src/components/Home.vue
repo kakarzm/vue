@@ -4,7 +4,7 @@
       <!--<el-container style="height:650px;">-->
       <el-header   class="header">
         <div class="logo">培养方案</div>
-        <div class="title">
+        <!--<div class="title">
           <el-menu
             :default-active="activeIndex2"
             class="el-menu-demo"
@@ -22,7 +22,7 @@
             </el-submenu>
             <el-menu-item index="3"><a href="https://www.ele.me" target="_blank">系统管理</a></el-menu-item>
           </el-menu>
-        </div>
+        </div>-->
         <div class="user-info">
           <el-dropdown  @command="handleCommand">
                 <span class="el-dropdown-link">

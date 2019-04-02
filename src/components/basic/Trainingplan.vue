@@ -44,7 +44,7 @@
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="trainingplans"
             size="mini"
             style="width: 100%"
             stripe
@@ -60,24 +60,18 @@
               prop="name"
               align="left"
               label="中文名称"
-              width="100">
+              width="200">
             </el-table-column>
             <el-table-column
               prop="englishName"
               align="left"
               label="英文名称"
-              width="100">
+              width="200">
             </el-table-column>
             <el-table-column
-              prop="code"
+              prop="major.name"
               align="left"
-              label="课程代码"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="courseType.name"
-              align="left"
-              label="课程类型"
+              label="关联专业"
               width="150">
             </el-table-column>
             <el-table-column
@@ -147,41 +141,33 @@
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
+      <el-form :model="trainingplan" size="mini" label-width="110px" :rules="rules" ref="addEntityForm">
         <el-row :gutter="20">
           <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
+            <el-form-item label="培养方案名称" prop="name">
+              <el-input v-model="trainingplan.name" prefix-icon="el-icon-edit"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="18">
             <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
+              <el-input v-model="trainingplan.englishName" prefix-icon="el-icon-edit"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
-              <el-cascader
-                placeholder="搜索:科技大学"
-                size="mini"
-                clearable
-                v-model="dmcoursetype"
-                @change="handleCascaderChange"
-                :show-all-levels="false"
-                :options="courseTypes"
-                filterable
-              ></el-cascader>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
+            <el-form-item label="关联专业" prop="majorId">
+              <el-select v-model="trainingplan.majorId" placeholder="关联专业">
+                <el-option
+                  clearable
+                  v-for="item in majors"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id">
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -196,7 +182,7 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'Trainingplan',
   data () {
     return {
       advanceSearchViewVisible: false,
@@ -209,26 +195,24 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
+      majors: [],
+      trainingplanTypes: [],
+      trainingplan: {
         name: '',
         englishName: '',
-        code: '',
-        type: ''
+        majorId: ''
       },
-      courses: [],
+      trainingplans: [],
       rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
+        name: [{required: true, message: '必填:培养方案名称', trigger: 'blur'}],
         englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
+        majorId: [{required: true, message: '必填:关联专业', trigger: 'blur'}]
       }
     }
   },
   created () {
     this.loadTable()
-    this.initCourseType()
+    this.initMajor()
   },
   computed: {
     selectionChange () {
@@ -236,20 +220,20 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
+    initMajor () {
       let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+      this.getRequest('/major/list/s').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          _this.majors = resp.data.list
         }
       })
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/trainingplan/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.trainingplans = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
@@ -260,24 +244,16 @@ export default {
       this.loadTable()
     },
     openSaveView () {
-      this.dialogTitle = '添加课程'
+      this.dialogTitle = '添加培养方案'
       this.dialogFormVisible = true
     },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
-      let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
-        }
-      })
-      this.course = {
+      this.dialogTitle = '编辑培养方案'
+      this.trainingplan = {
         id: item.id,
         name: item.name,
         englishName: item.englishName,
-        code: item.code,
-        type: item.type
+        majorId: item.majorId
       }
       this.dialogFormVisible = true
     },
@@ -286,8 +262,8 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
+          if (this.trainingplan.id) {
+            this.putRequest('/trainingplan/entity', this.trainingplan).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -295,7 +271,7 @@ export default {
               }
             })
           } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
+            this.postRequest('/trainingplan/entity', this.trainingplan).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -310,12 +286,12 @@ export default {
     },
     deleteEntity (item) {
       let _this = this
-      this.$confirm('此操作将删除该专业, 是否继续?', '提示', {
+      this.$confirm('此操作将删除该培养方案, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
+        this.putRequest('/trainingplan/statue/' + item.id).then(resp => {
           if (resp && resp.status === 200) {
             _this.$message({
               type: resp.data.status,
@@ -336,22 +312,20 @@ export default {
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
+      this.trainingplan = {}
+      this.trainingplan = {
         name: '',
         englishName: '',
-        code: '',
-        type: ''
+        majorId: ''
       }
     },
     handleCascaderChange (item) {
       if (item.length === 0) {
-        this.course.type = ''
+        this.trainingplan.type = ''
         return
       }
       let id = item[item.length - 1]
-      this.course.type = id
+      this.trainingplan.type = id
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)

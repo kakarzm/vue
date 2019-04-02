@@ -37,14 +37,14 @@
             </el-button>
           </el-popover>
           <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView">
-            添加课程
+            添加学校
           </el-button>
         </div>
       </el-header>
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="universities"
             size="mini"
             style="width: 100%"
             stripe
@@ -59,26 +59,50 @@
             <el-table-column
               prop="name"
               align="left"
-              label="中文名称"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="englishName"
-              align="left"
-              label="英文名称"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="code"
-              align="left"
-              label="课程代码"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="courseType.name"
-              align="left"
-              label="课程类型"
+              label="学校名称"
               width="150">
+            </el-table-column>
+            <el-table-column
+              prop="province.cityname"
+              align="left"
+              label="所属省份"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="city.cityname"
+              align="left"
+              label="所属城市"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="type"
+              align="left"
+              label="学校类别"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="jubanType"
+              align="left"
+              label="学校举办"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="yuanxiaoType"
+              align="left"
+              label="院校类型"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="attribute"
+              align="left"
+              label="院校隶属"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="banxueType"
+              align="left"
+              label="办学类型"
+              width="100">
             </el-table-column>
             <el-table-column
               prop="statue"
@@ -142,46 +166,93 @@
         </div>
       </el-main>
     </el-container>
-    <el-dialog width="25%"
+    <el-dialog width="66%"
                :title="dialogTitle"
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
+      <el-form :model="university" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
         <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="学校名称" prop="name">
+              <el-input v-model="university.name" prefix-icon="el-icon-edit"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="所属省份" prop="provinceId">
+              <el-select v-model="university.provinceId"
+                         clearable
+                         @change="loadCities"
+                         placeholder="请选择省份">
+                <el-option v-for="item in provinces" :key="item.id" :label="item.cityname" :value="item.id"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
-              <el-cascader
-                placeholder="搜索:科技大学"
-                size="mini"
-                clearable
-                v-model="dmcoursetype"
-                @change="handleCascaderChange"
-                :show-all-levels="false"
-                :options="courseTypes"
-                filterable
-              ></el-cascader>
+          <el-col :span="6">
+            <el-form-item label="所属城市" prop="cityId">
+              <el-select v-model="university.cityId"
+                         clearable
+                         placeholder="请选择城市">
+                <el-option v-for="item in cities" :key="item.id" :label="item.cityname" :value="item.id"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="学校类别" prop="type">
+              <el-select v-model="university.type"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="985院校" value="985"></el-option>
+                <el-option label="211院校" value="211"></el-option>
+                <el-option label="其他院校" value="其他"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="院校举办" prop="jubanType">
+              <el-select v-model="university.jubanType"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="民办" value="民办"></el-option>
+                <el-option label="公办" value="公办"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="院校类型" prop="yuanxiaoType">
+              <el-select v-model="university.yuanxiaoType"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="综合类" value="综合类"></el-option>
+                <el-option label="师范类" value="师范类"></el-option>
+                <el-option label="工科类" value="工科类"></el-option>
+                <el-option label="农业类" value="农业类"></el-option>
+                <el-option label="财经类" value="财经类"></el-option>
+                <el-option label="林业类" value="林业类"></el-option>
+                <el-option label="医药类" value="医药类"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="院校隶属" prop="attribute">
+              <el-select v-model="university.attribute"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="教育部" value="教育部"></el-option>
+                <el-option label="工信部" value="工信部"></el-option>
+                <el-option label="卫生部" value="工科类"></el-option>
+                <el-option label="中国科学院" value="中国科学院"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="办学类型" prop="banxueType">
+              <el-select v-model="university.banxueType"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="大学" value="大学"></el-option>
+                <el-option label="学院" value="学院"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -196,7 +267,7 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'University',
   data () {
     return {
       advanceSearchViewVisible: false,
@@ -209,26 +280,34 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
+      university: {
         name: '',
-        englishName: '',
-        code: '',
-        type: ''
+        provinceId: '',
+        cityId: '',
+        type: '',
+        jubanType: '',
+        yuanxiaoType: '',
+        attribute: '',
+        banxueType: ''
       },
-      courses: [],
+      universities: [],
+      provinces: [],
+      cities: [],
       rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
-        englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
+        name: [{required: true, message: '必填:学校名称', trigger: 'blur'}],
+        provinceId: [{required: true, message: '必填:所属省份', trigger: 'blur'}],
+        cityId: [{required: true, message: '必填:所属城市', trigger: 'blur'}],
+        type: [{required: true, message: '必填:学校类型', trigger: 'blur'}],
+        jubanType: [{required: true, message: '必填:院校举办', trigger: 'blur'}],
+        yuanxiaoType: [{required: true, message: '必填:院校类型', trigger: 'blur'}],
+        attribute: [{required: true, message: '必填:院校隶属', trigger: 'blur'}],
+        banxueType: [{required: true, message: '必填:办学类型', trigger: 'blur'}]
       }
     }
   },
   created () {
+    this.initProvince()
     this.loadTable()
-    this.initCourseType()
   },
   computed: {
     selectionChange () {
@@ -236,20 +315,31 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
-      let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+    initProvince () {
+      this.getRequest('/district/pid/100000').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          this.provinces = resp.data.list
         }
       })
+    },
+    loadCities () {
+      this.university.cityId = ''
+      if (this.university.provinceId) {
+        this.getRequest('/district/pid/' + this.university.provinceId).then(resp => {
+          if (resp && resp.status === 200) {
+            this.cities = resp.data.list
+          }
+        })
+      } else {
+        this.cities = []
+      }
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/university/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.universities = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
@@ -260,24 +350,31 @@ export default {
       this.loadTable()
     },
     openSaveView () {
-      this.dialogTitle = '添加课程'
+      this.dialogTitle = '添加学校'
       this.dialogFormVisible = true
     },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
+      this.dialogTitle = '编辑学校'
       let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
+      this.$.ajax({
+        type: 'get',
+        url: '/district/pid/' + item.provinceId,
+        dataType: 'json',
+        asycn: false,
+        success: function (resp) {
+          _this.cities = resp.list
         }
       })
-      this.course = {
+      this.university = {
         id: item.id,
         name: item.name,
-        englishName: item.englishName,
-        code: item.code,
-        type: item.type
+        provinceId: item.provinceId,
+        cityId: item.cityId,
+        type: item.type,
+        jubanType: item.jubanType,
+        yuanxiaoType: item.yuanxiaoType,
+        attribute: item.attribute,
+        banxueType: item.banxueType
       }
       this.dialogFormVisible = true
     },
@@ -286,8 +383,8 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
+          if (this.university.id) {
+            this.putRequest('/university/entity', this.university).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -295,7 +392,7 @@ export default {
               }
             })
           } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
+            this.postRequest('/university/entity', this.university).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -310,12 +407,12 @@ export default {
     },
     deleteEntity (item) {
       let _this = this
-      this.$confirm('此操作将删除该专业, 是否继续?', '提示', {
+      this.$confirm('此操作将删除该学校, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
+        this.putRequest('/university/statue/' + item.id).then(resp => {
           if (resp && resp.status === 200) {
             _this.$message({
               type: resp.data.status,
@@ -333,25 +430,21 @@ export default {
     },
     closeSaveOrUpdateView () {
       this.emptyEntity()
+      this.cities = []
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
+      this.university = {}
+      this.university = {
         name: '',
-        englishName: '',
-        code: '',
-        type: ''
+        provinceId: '',
+        cityId: '',
+        type: '',
+        jubanType: '',
+        yuanxiaoType: '',
+        attribute: '',
+        banxueType: ''
       }
-    },
-    handleCascaderChange (item) {
-      if (item.length === 0) {
-        this.course.type = ''
-        return
-      }
-      let id = item[item.length - 1]
-      this.course.type = id
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)

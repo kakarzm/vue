@@ -37,14 +37,14 @@
             </el-button>
           </el-popover>
           <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView">
-            添加课程
+            添加专业
           </el-button>
         </div>
       </el-header>
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="majors"
             size="mini"
             style="width: 100%"
             stripe
@@ -71,14 +71,38 @@
             <el-table-column
               prop="code"
               align="left"
-              label="课程代码"
+              label="专业代码"
               width="100">
             </el-table-column>
             <el-table-column
-              prop="courseType.name"
+              prop="dmMajor.majorname"
               align="left"
-              label="课程类型"
+              label="学科门类"
               width="150">
+            </el-table-column>
+            <el-table-column
+              prop="university.name"
+              align="left"
+              label="所属学校"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="level"
+              align="left"
+              label="层次"
+              width="60">
+            </el-table-column>
+            <el-table-column
+              prop="rank"
+              align="left"
+              label="等级"
+              width="60">
+            </el-table-column>
+            <el-table-column
+              prop="majorBanxueType"
+              align="left"
+              label="专业办学类型"
+              width="100">
             </el-table-column>
             <el-table-column
               prop="statue"
@@ -142,46 +166,92 @@
         </div>
       </el-main>
     </el-container>
-    <el-dialog width="25%"
+    <el-dialog width="66%"
                :title="dialogTitle"
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
+      <el-form :model="major" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
         <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="专业名称" prop="name">
+              <el-input v-model="major.name" prefix-icon="el-icon-edit"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
+          <el-col :span="6">
             <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
+              <el-input v-model="major.englishName" prefix-icon="el-icon-edit"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
+          <el-col :span="6">
+            <el-form-item label="学科门类" prop="discipline">
               <el-cascader
                 placeholder="搜索:科技大学"
                 size="mini"
                 clearable
-                v-model="dmcoursetype"
+                v-model="dmmajor"
                 @change="handleCascaderChange"
                 :show-all-levels="false"
-                :options="courseTypes"
+                :options="disciplines"
                 filterable
               ></el-cascader>
             </el-form-item>
           </el-col>
+          <el-col :span="6">
+            <el-form-item label="专业代码" prop="code">
+              <el-input v-model="major.code" prefix-icon="el-icon-edit" :disabled="true"></el-input>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="所属学校" prop="universityId">
+              <el-select v-model="major.universityId"
+                         clearable
+                         @change="initUniversities"
+                         placeholder="请选择学校">
+                <el-option v-for="item in universities" :key="item.id" :label="item.name" :value="item.id"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="层次" prop="level">
+              <el-select v-model="major.level"
+                         clearable
+                         placeholder="请选择层次">
+                <el-option label="专科" value="专科"></el-option>
+                <el-option label="本科" value="本科"></el-option>
+                <el-option label="硕士" value="硕士"></el-option>
+                <el-option label="博士" value="博士"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="等级" prop="rank">
+              <el-select v-model="major.rank"
+                         clearable
+                         placeholder="请选择等级">
+                <el-option label="A+" value="A+"></el-option>
+                <el-option label="A" value="A"></el-option>
+                <el-option label="A_" value="A_"></el-option>
+                <el-option label="B+" value="B+"></el-option>
+                <el-option label="B" value="B"></el-option>
+                <el-option label="B-" value="B-"></el-option>
+                <el-option label="C+" value="C+"></el-option>
+                <el-option label="C" value="C"></el-option>
+                <el-option label="C-" value="C-"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="专办类型" prop="majorBanxueType">
+              <el-select v-model="major.majorBanxueType"
+                         clearable
+                         placeholder="请选择类型">
+                <el-option label="普通" value="普通"></el-option>
+                <el-option label="校企合作" value="校企合作"></el-option>
+                <el-option label="中外合作" value="中外合作"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -196,7 +266,7 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'Major',
   data () {
     return {
       advanceSearchViewVisible: false,
@@ -209,26 +279,36 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
+      dmmajor: [],
+      major: {
         name: '',
         englishName: '',
         code: '',
-        type: ''
+        universityId: '',
+        level: '',
+        rank: '',
+        majorBanxueType: '',
+        discipline: ''
       },
-      courses: [],
+      majors: [],
+      universities: [],
+      disciplines: [],
       rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
+        name: [{required: true, message: '必填:专业名称', trigger: 'blur'}],
         englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
+        discipline: [{required: true, message: '必填:学科门类', trigger: 'blur'}],
+        code: [{required: true, message: '必填:专业代码', trigger: 'blur'}],
+        universityId: [{required: true, message: '必填:所属院校', trigger: 'blur'}],
+        level: [{required: true, message: '必填:层次', trigger: 'blur'}],
+        rank: [{required: true, message: '必填:专业等级', trigger: 'blur'}],
+        majorBanxueType: [{required: true, message: '必填:办学类型', trigger: 'blur'}]
       }
     }
   },
   created () {
     this.loadTable()
-    this.initCourseType()
+    this.initUniversities()
+    this.initDisciplines()
   },
   computed: {
     selectionChange () {
@@ -236,20 +316,27 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
-      let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+    initUniversities () {
+      this.getRequest('/university/list/s').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          this.universities = resp.data.list
+        }
+      })
+    },
+    initDisciplines () {
+      let _this = this
+      this.getRequest('/dmmajor/load').then(resp => {
+        if (resp && resp.status === 200) {
+          _this.disciplines = resp.data.list
         }
       })
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/major/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.majors = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
@@ -260,24 +347,27 @@ export default {
       this.loadTable()
     },
     openSaveView () {
-      this.dialogTitle = '添加课程'
+      this.dialogTitle = '添加专业'
       this.dialogFormVisible = true
     },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
+      this.dialogTitle = '编辑专业'
       let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
+      this.getRequest('/dmmajor/path/' + item.discipline).then(resp => {
         if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
+          _this.dmmajor = resp.data.array
         }
       })
-      this.course = {
+      this.major = {
         id: item.id,
         name: item.name,
         englishName: item.englishName,
         code: item.code,
-        type: item.type
+        universityId: item.universityId,
+        level: item.level,
+        rank: item.rank,
+        majorBanxueType: item.majorBanxueType,
+        discipline: item.discipline
       }
       this.dialogFormVisible = true
     },
@@ -286,8 +376,8 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
+          if (this.major.id) {
+            this.putRequest('/major/entity', this.major).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -295,7 +385,7 @@ export default {
               }
             })
           } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
+            this.postRequest('/major/entity', this.major).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -315,7 +405,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
+        this.putRequest('/major/statue/' + item.id).then(resp => {
           if (resp && resp.status === 200) {
             _this.$message({
               type: resp.data.status,
@@ -336,22 +426,33 @@ export default {
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
+      this.dmmajor = []
+      this.major = {}
+      this.major = {
         name: '',
         englishName: '',
         code: '',
-        type: ''
+        universityId: '',
+        level: '',
+        rank: '',
+        majorBanxueType: '',
+        discipline: ''
       }
     },
     handleCascaderChange (item) {
       if (item.length === 0) {
-        this.course.type = ''
+        this.major.code = ''
         return
       }
       let id = item[item.length - 1]
-      this.course.type = id
+      this.major.discipline = id
+      let _this = this
+      this.getRequest('/dmmajor/' + id).then(resp => {
+        if (resp && resp.status === 200) {
+          _this.major.code = resp.data.entity.majorcode
+          console.log(_this.major.code + 'asdasd')
+        }
+      })
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)

@@ -4,7 +4,7 @@
       <el-header style="padding: 0px;display:flex;justify-content:space-between;align-items: center">
         <div style="display: inline">
           <el-input
-            placeholder="通过学校名称搜索学校信息,记得回车哦..."
+            placeholder="通过学校名称搜索xxxx,记得回车哦..."
             v-model="keyword"
             clearable
             style="width: 300px;margin: 0px;padding: 0px;"
@@ -36,19 +36,15 @@
             <el-button slot="reference" type="primary" size="mini"><i class="fa fa-lg fa-level-down" style="margin-right: 5px" @click="openUploadView"></i>文件操作
             </el-button>
           </el-popover>
-          <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView">
-            添加课程
-          </el-button>
         </div>
       </el-header>
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="trainingplans"
             size="mini"
             style="width: 100%"
             stripe
-
             v-loading="loading"
             @selection-change="handleSelectionChange">
             <el-table-column
@@ -57,27 +53,56 @@
               width="30">
             </el-table-column>
             <el-table-column
+              type="expand"
+              align="left"
+              width="30">
+              <template slot-scope="props">
+                <el-table :data="props.row.courses" size="mini" style="width: 66%" stripe>
+                  <el-table-column type="index" align="left" width="30">
+                  </el-table-column>
+                  <el-table-column
+                    prop="code"
+                    align="left"
+                    label="课程代码"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="name"
+                    align="left"
+                    label="中文名称"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="englishName"
+                    align="left"
+                    label="英文名称"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="courseType.name"
+                    align="left"
+                    label="课程类型"
+                    width="100">
+                  </el-table-column>
+                </el-table>
+              </template>
+            </el-table-column>
+            <el-table-column
               prop="name"
               align="left"
               label="中文名称"
-              width="100">
+              width="200">
             </el-table-column>
             <el-table-column
               prop="englishName"
               align="left"
               label="英文名称"
-              width="100">
+              width="200">
             </el-table-column>
             <el-table-column
-              prop="code"
+              prop="major.name"
               align="left"
-              label="课程代码"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="courseType.name"
-              align="left"
-              label="课程类型"
+              label="关联专业"
               width="150">
             </el-table-column>
             <el-table-column
@@ -120,8 +145,7 @@
               fixed="right"
               width="200">
               <template slot-scope="scope">
-                <el-button size="mini" icon="el-icon-edit" @click="openUpdateView(scope.row)">编辑</el-button>
-                <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteEntity(scope.row)">删除</el-button>
+                <el-button size="mini" icon="el-icon-edit" @click="openUpdateView(scope.row)">编辑主干课程</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -142,53 +166,26 @@
         </div>
       </el-main>
     </el-container>
-    <el-dialog width="25%"
+    <el-dialog width="50%"
                :title="dialogTitle"
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
-              <el-cascader
-                placeholder="搜索:科技大学"
-                size="mini"
-                clearable
-                v-model="dmcoursetype"
-                @change="handleCascaderChange"
-                :show-all-levels="false"
-                :options="courseTypes"
-                filterable
-              ></el-cascader>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+      <el-transfer
+        style="text-align: left; display: inline-block"
+        v-model="mainCourses"
+        filterable
+        :titles="['所有课程', '主干课程']"
+        :format="{
+        noChecked: '${total}',
+        hasChecked: '${checked}/${total}'
+      }"
+        @change="handleTransferChange"
+        :data="courses">
+      </el-transfer>
       <div slot="footer" class="dialog-footer">
         <el-button @click="closeSaveOrUpdateView" size="mini">取 消</el-button>
-        <el-button type="primary" @click="saveOrUpdate('addEntityForm')" size="mini">确 定</el-button>
+        <el-button type="primary" @click="updateMainCourse" size="mini">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -196,7 +193,7 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'PlanCourse',
   data () {
     return {
       advanceSearchViewVisible: false,
@@ -209,26 +206,15 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
-      },
       courses: [],
-      rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
-        englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
-      }
+      planId: '',
+      trainingplans: [],
+      mainCourses: []
     }
   },
   created () {
     this.loadTable()
-    this.initCourseType()
+    this.initCourses()
   },
   computed: {
     selectionChange () {
@@ -236,20 +222,20 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
+    initCourses () {
       let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+      this.getRequest('/course/initMain').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          _this.courses = resp.data.list
         }
       })
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/trainingplan/course?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.trainingplans = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
@@ -259,76 +245,23 @@ export default {
       this.pageSize = 1
       this.loadTable()
     },
-    openSaveView () {
-      this.dialogTitle = '添加课程'
-      this.dialogFormVisible = true
-    },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
+      this.dialogTitle = '编辑主干课程'
+      this.planId = item.id
       let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
-        }
+      item.courses.forEach((item, index) => {
+        _this.mainCourses.push(item.id)
       })
-      this.course = {
-        id: item.id,
-        name: item.name,
-        englishName: item.englishName,
-        code: item.code,
-        type: item.type
-      }
       this.dialogFormVisible = true
     },
-    saveOrUpdate (formName) {
-      this.keyword = ''
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
-              if (resp && resp.status === 200) {
-                this.$message({type: resp.data.status, message: resp.data.msg})
-                _this.closeSaveOrUpdateView()
-                _this.loadTable()
-              }
-            })
-          } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
-              if (resp && resp.status === 200) {
-                this.$message({type: resp.data.status, message: resp.data.msg})
-                _this.closeSaveOrUpdateView()
-                _this.loadTable()
-              }
-            })
-          }
-        } else {
-          return false
-        }
-      })
-    },
-    deleteEntity (item) {
+    updateMainCourse () {
       let _this = this
-      this.$confirm('此操作将删除该专业, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
-          if (resp && resp.status === 200) {
-            _this.$message({
-              type: resp.data.status,
-              message: resp.data.msg
-            })
-            this.loadTable()
-          }
-        })
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除'
-        })
+      this.postRequest('/trainingplan/course?id=' + this.planId + '&courses=' + this.mainCourses).then(resp => {
+        if (resp && resp.status === 200) {
+          _this.$message({type: resp.data.status, message: resp.data.msg})
+          _this.closeSaveOrUpdateView()
+          _this.loadTable()
+        }
       })
     },
     closeSaveOrUpdateView () {
@@ -336,22 +269,20 @@ export default {
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
-      }
+      this.mainCourses = []
+    },
+    handleTransferChange (value, direction, key) {
+      console.log(value)
+      console.log(direction)
+      console.log(key)
     },
     handleCascaderChange (item) {
       if (item.length === 0) {
-        this.course.type = ''
+        this.trainingplan.type = ''
         return
       }
       let id = item[item.length - 1]
-      this.course.type = id
+      this.trainingplan.type = id
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)

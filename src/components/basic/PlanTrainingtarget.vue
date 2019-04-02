@@ -4,7 +4,7 @@
       <el-header style="padding: 0px;display:flex;justify-content:space-between;align-items: center">
         <div style="display: inline">
           <el-input
-            placeholder="通过学校名称搜索学校信息,记得回车哦..."
+            placeholder="通过xxxx,记得回车哦..."
             v-model="keyword"
             clearable
             style="width: 300px;margin: 0px;padding: 0px;"
@@ -36,15 +36,15 @@
             <el-button slot="reference" type="primary" size="mini"><i class="fa fa-lg fa-level-down" style="margin-right: 5px" @click="openUploadView"></i>文件操作
             </el-button>
           </el-popover>
-          <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView">
-            添加课程
+          <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView" :disabled="addButtonDisabled">
+            添加目标
           </el-button>
         </div>
       </el-header>
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="planTrainingtargets"
             size="mini"
             style="width: 100%"
             stripe
@@ -57,27 +57,28 @@
               width="30">
             </el-table-column>
             <el-table-column
-              prop="name"
+              type="expand"
               align="left"
-              label="中文名称"
-              width="100">
+              width="30">
+              <template slot-scope="props">
+                <el-form label-position="left" class="demo-table-expand">
+                  <el-form-item v-for="(item,index) in props.row.targetRequires" :key="index" :label="'要求' + (index + 1) + ':'">
+                    <span style="font-style: italic;font-family: 楷体;color: gray">{{ item.context }}</span>
+                  </el-form-item>
+                </el-form>
+              </template>
             </el-table-column>
             <el-table-column
-              prop="englishName"
+              prop="trainingplan.name"
               align="left"
-              label="英文名称"
-              width="100">
+              label="培养方案名称"
+              width="200">
             </el-table-column>
             <el-table-column
-              prop="code"
+              prop="target"
               align="left"
-              label="课程代码"
-              width="100">
-            </el-table-column>
-            <el-table-column
-              prop="courseType.name"
-              align="left"
-              label="课程类型"
+              show-overflow-tooltip="true"
+              label="培养目标"
               width="150">
             </el-table-column>
             <el-table-column
@@ -142,48 +143,60 @@
         </div>
       </el-main>
     </el-container>
-    <el-dialog width="25%"
+    <el-dialog width="66%"
                :title="dialogTitle"
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
-              <el-cascader
-                placeholder="搜索:科技大学"
-                size="mini"
-                clearable
-                v-model="dmcoursetype"
-                @change="handleCascaderChange"
-                :show-all-levels="false"
-                :options="courseTypes"
-                filterable
-              ></el-cascader>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
-            </el-form-item>
-          </el-col>
+      <el-form :model="planTrainingtarget" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
+        <el-row :gutter="10">
+         <el-col :span="8">
+           <el-row :gutter="20">
+             <el-col :span="20">
+               <el-form-item label="培养方案" prop="name">
+                 <el-select v-model="planTrainingtarget.planId" placeholder="请选择培养方案">
+                   <el-option
+                     v-for="item in trainingplans"
+                     :key="item.id"
+                     :label="item.name"
+                     :value="item.id">
+                   </el-option>
+                 </el-select>
+               </el-form-item>
+             </el-col>
+           </el-row>
+           <el-row :gutter="20">
+             <el-col :span="24">
+               <el-form-item label="培养目标" prop="limitYear">
+                 <el-input type="textarea" rows="6" v-model="planTrainingtarget.target" prefix-icon="el-icon-edit" placeholder="培养目标"></el-input>
+               </el-form-item>
+             </el-col>
+           </el-row>
+         </el-col>
+         <el-col :span="16">
+           <el-row :gutter="20">
+            <el-col :span="4">
+              <el-button type="primary" size="mini" icon="el-icon-plus" circle @click="addRequire" style="margin-right: 15px"></el-button>
+            </el-col>
+             <el-col :span="4">
+               <span style="font-weight: bolder">新增要求</span>
+             </el-col>
+           </el-row>
+           <el-row :gutter="20">
+             <el-col :span="12" v-for="(r, index) in planTrainingtarget.targetRequires" :key="index">
+               <el-row :gutter="20">
+                <el-col :span="20">
+                  <el-form-item :label="'要求' + (index+1)" :prop="'targetRequires.' + index + '.context'" :rules="{required: true, message: '需求不能为空', trigger: 'blur'}">
+                    <el-input type="text" v-model="r.context" prefix-icon="el-icon-edit"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="1">
+                  <el-button type="danger" size="mini" icon="el-icon-delete" circle @click.prevent="removeRequire(r)"></el-button>
+                </el-col>
+               </el-row>
+               </el-col>
+           </el-row>
+         </el-col>
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -196,12 +209,13 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'PlanTrainingtarget',
   data () {
     return {
       advanceSearchViewVisible: false,
       dialogFormVisible: false,
       popoverUploadVisible: false,
+      addButtonDisabled: false,
       loading: false,
       dialogTitle: '',
       pageSize: 1,
@@ -209,26 +223,24 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
+      trainingplans: [],
+      planTrainingtarget: {
+        planId: '',
+        target: '',
+        targetRequires: [
+          {context: ''}
+        ]
       },
-      courses: [],
+      planTrainingtargets: [],
       rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
-        englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
+        planId: [{required: true, message: '必填:培养方案', trigger: 'blur'}],
+        target: [{required: true, message: '必填:培养目标', trigger: 'blur'}]
       }
     }
   },
   created () {
     this.loadTable()
-    this.initCourseType()
+    this.initTrainingplan()
   },
   computed: {
     selectionChange () {
@@ -236,23 +248,29 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
+    initTrainingplan () {
       let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+      this.getRequest('/ptt/load/tp').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          _this.trainingplans = resp.data.list
+        }
+        if (this.trainingplans.length === 0) {
+          this.addButtonDisabled = true
+        } else {
+          this.addButtonDisabled = false
         }
       })
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/ptt/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.planTrainingtargets = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
+        this.initTrainingplan()
       })
     },
     searchEntity () {
@@ -260,24 +278,16 @@ export default {
       this.loadTable()
     },
     openSaveView () {
-      this.dialogTitle = '添加课程'
+      this.dialogTitle = '添加培养目标'
       this.dialogFormVisible = true
     },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
-      let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
-        }
-      })
-      this.course = {
+      this.dialogTitle = '编辑培养目标'
+      this.planTrainingtarget = {
         id: item.id,
-        name: item.name,
-        englishName: item.englishName,
-        code: item.code,
-        type: item.type
+        planId: item.planId,
+        target: item.target,
+        targetRequires: item.targetRequires
       }
       this.dialogFormVisible = true
     },
@@ -286,8 +296,8 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
+          if (this.planTrainingtarget.id) {
+            this.axios.put('/ptt/entity', this.planTrainingtarget).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -295,7 +305,7 @@ export default {
               }
             })
           } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
+            this.axios.post('/ptt/entity', this.planTrainingtarget).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -310,12 +320,12 @@ export default {
     },
     deleteEntity (item) {
       let _this = this
-      this.$confirm('此操作将删除该专业, 是否继续?', '提示', {
+      this.$confirm('此操作将删除该培养方案, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
+        this.putRequest('/ptt/statue/' + item.id).then(resp => {
           if (resp && resp.status === 200) {
             _this.$message({
               type: resp.data.status,
@@ -336,22 +346,25 @@ export default {
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
+      this.planTrainingtarget = {}
+      this.planTrainingtarget = {
+        planId: '',
+        target: '',
+        targetRequires: [
+          {context: ''}
+        ]
       }
     },
-    handleCascaderChange (item) {
-      if (item.length === 0) {
-        this.course.type = ''
-        return
+    addRequire () {
+      this.planTrainingtarget.targetRequires.push({
+        context: ''
+      })
+    },
+    removeRequire (item) {
+      let index = this.planTrainingtarget.targetRequires.indexOf(item)
+      if (index !== -1) {
+        this.planTrainingtarget.targetRequires.splice(index, 1)
       }
-      let id = item[item.length - 1]
-      this.course.type = id
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)
@@ -383,5 +396,17 @@ export default {
   }
   .upload-demo {
     display: inline;
+  }
+  .demo-table-expand{
+    font-size: 0;
+  }
+  .demo-table-expand label {
+    width: 90px ;
+    color: #99a9bf;
+  }
+  .demo-table-expand .el-form-item {
+    margin-right: 0;
+    margin-bottom: 0;
+    width: 60%;
   }
 </style>

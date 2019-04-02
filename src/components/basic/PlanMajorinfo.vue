@@ -4,7 +4,7 @@
       <el-header style="padding: 0px;display:flex;justify-content:space-between;align-items: center">
         <div style="display: inline">
           <el-input
-            placeholder="通过学校名称搜索学校信息,记得回车哦..."
+            placeholder="通过专业介绍搜索专业信息,记得回车哦..."
             v-model="keyword"
             clearable
             style="width: 300px;margin: 0px;padding: 0px;"
@@ -36,15 +36,15 @@
             <el-button slot="reference" type="primary" size="mini"><i class="fa fa-lg fa-level-down" style="margin-right: 5px" @click="openUploadView"></i>文件操作
             </el-button>
           </el-popover>
-          <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView">
-            添加课程
+          <el-button type="primary" size="mini" icon="el-icon-plus" @click="openSaveView" :disabled="addButtonDisabled">
+            添加专信
           </el-button>
         </div>
       </el-header>
       <el-main>
         <div>
           <el-table
-            :data="courses"
+            :data="planMajorinfos"
             size="mini"
             style="width: 100%"
             stripe
@@ -57,27 +57,41 @@
               width="30">
             </el-table-column>
             <el-table-column
-              prop="name"
+              prop="trainingplan.name"
               align="left"
-              label="中文名称"
-              width="100">
+              label="培养方案名称"
+              width="200">
             </el-table-column>
             <el-table-column
-              prop="englishName"
+              prop="limitYear"
               align="left"
-              label="英文名称"
-              width="100">
+              label="修业年限"
+              width="80">
             </el-table-column>
             <el-table-column
-              prop="code"
+              prop="degree"
               align="left"
-              label="课程代码"
-              width="100">
+              label="授予学位"
+              width="150">
             </el-table-column>
             <el-table-column
-              prop="courseType.name"
+              prop="minCredit"
               align="left"
-              label="课程类型"
+              label="毕业最低分"
+              width="120">
+            </el-table-column>
+            <el-table-column
+              prop="introduction"
+              align="left"
+              show-overflow-tooltip="true"
+              label="专业介绍"
+              width="150">
+            </el-table-column>
+            <el-table-column
+              prop="requirementDescription"
+              align="left"
+              show-overflow-tooltip="true"
+              label="毕业要求描述"
               width="150">
             </el-table-column>
             <el-table-column
@@ -142,46 +156,50 @@
         </div>
       </el-main>
     </el-container>
-    <el-dialog width="25%"
+    <el-dialog width="66%"
                :title="dialogTitle"
                :close-on-click-modal="false"
                style="padding: 0;"
                :visible.sync="dialogFormVisible">
-      <el-form :model="course" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
+      <el-form :model="planMajorinfo" size="mini" label-width="80px" :rules="rules" ref="addEntityForm">
         <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程名称" prop="name">
-              <el-input v-model="course.name" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="6">
+            <el-form-item label="培养方案" prop="name">
+              <el-select v-model="planMajorinfo.planId" placeholder="请选择培养方案">
+                <el-option
+                  v-for="item in trainingplans"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="修业年限" prop="limitYear">
+              <el-input v-model="planMajorinfo.limitYear" prefix-icon="el-icon-edit" placeholder="修业年限"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="授予学位" prop="degree">
+              <el-input v-model="planMajorinfo.degree" prefix-icon="el-icon-edit" placeholder="授予学位"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="最低学分" prop="minCredit">
+              <el-input v-model="planMajorinfo.minCredit" prefix-icon="el-icon-edit" placeholder="毕业最低学分"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="英文名称" prop="englishName">
-              <el-input v-model="course.englishName" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="12">
+            <el-form-item label="专业介绍" prop="introduction">
+              <el-input type="textarea" v-model="planMajorinfo.introduction" prefix-icon="el-icon-edit" placeholder="专业介绍" rows="6"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程类别" prop="type">
-              <el-cascader
-                placeholder="搜索:科技大学"
-                size="mini"
-                clearable
-                v-model="dmcoursetype"
-                @change="handleCascaderChange"
-                :show-all-levels="false"
-                :options="courseTypes"
-                filterable
-              ></el-cascader>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-form-item label="课程代码" prop="code">
-              <el-input v-model="course.code" prefix-icon="el-icon-edit"></el-input>
+          <el-col :span="12">
+            <el-form-item label="要求描述" prop="requirementDescription">
+              <el-input type="textarea" v-model="planMajorinfo.requirementDescription" prefix-icon="el-icon-edit" placeholder="毕业要求描述" rows="6"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -196,12 +214,13 @@
 
 <script>
 export default {
-  name: 'Course',
+  name: 'Trainingplan',
   data () {
     return {
       advanceSearchViewVisible: false,
       dialogFormVisible: false,
       popoverUploadVisible: false,
+      addButtonDisabled: false,
       loading: false,
       dialogTitle: '',
       pageSize: 1,
@@ -209,26 +228,30 @@ export default {
       total: 10,
       multipleSelection: [],
       keyword: '',
-      courseTypes: [],
-      dmcoursetype: [],
-      course: {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
+      trainingplans: [],
+      planMajorinfoTypes: [],
+      planMajorinfo: {
+        planId: '',
+        introduction: '',
+        limitYear: '',
+        degree: '',
+        minCredit: '',
+        requirementDescription: ''
       },
-      courses: [],
+      planMajorinfos: [],
       rules: {
-        name: [{required: true, message: '必填:课程名称', trigger: 'blur'}],
-        englishName: [{required: true, message: '必填:英文名称', trigger: 'blur'}],
-        code: [{required: true, message: '必填:课程代码', trigger: 'blur'}],
-        type: [{required: true, message: '必填:课程类型', trigger: 'blur'}]
+        planId: [{required: true, message: '必填:培养方案', trigger: 'blur'}],
+        introduction: [{required: true, message: '必填:专业介绍', trigger: 'blur'}],
+        limitYear: [{required: true, message: '必填:修业年限', trigger: 'blur'}],
+        degree: [{required: true, message: '必填:授予学位', trigger: 'blur'}],
+        minCredit: [{required: true, message: '必填:毕业最低分', trigger: 'blur'}],
+        requirementDescription: [{required: true, message: '必填:毕业要求描述', trigger: 'blur'}]
       }
     }
   },
   created () {
     this.loadTable()
-    this.initCourseType()
+    this.initTrainingplan()
   },
   computed: {
     selectionChange () {
@@ -236,23 +259,29 @@ export default {
     }
   },
   methods: {
-    initCourseType () {
+    initTrainingplan () {
       let _this = this
-      this.getRequest('/coursetype/load').then(resp => {
+      this.getRequest('/pmi/load/tp').then(resp => {
         if (resp && resp.status === 200) {
-          _this.courseTypes = resp.data.list
+          _this.trainingplans = resp.data.list
+        }
+        if (this.trainingplans.length === 0) {
+          this.addButtonDisabled = true
+        } else {
+          this.addButtonDisabled = false
         }
       })
     },
     loadTable () {
       let _this = this
       this.loading = true
-      this.getRequest('/course/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
+      this.getRequest('/pmi/list?keyword=' + this.keyword + '&pageSize=' + this.pageSize + '&pageNumber=' + this.pageNumber).then(resp => {
         if (resp && resp.status === 200) {
-          _this.courses = resp.data.list
+          _this.planMajorinfos = resp.data.list
           _this.total = resp.data.total
         }
         this.loading = false
+        this.initTrainingplan()
       })
     },
     searchEntity () {
@@ -260,24 +289,19 @@ export default {
       this.loadTable()
     },
     openSaveView () {
-      this.dialogTitle = '添加课程'
+      this.dialogTitle = '添加培养专业信息'
       this.dialogFormVisible = true
     },
     openUpdateView (item) {
-      this.dialogTitle = '编辑课程'
-      let _this = this
-      this.getRequest('/coursetype/path/' + item.type).then(resp => {
-        if (resp && resp.status === 200) {
-          _this.dmcoursetype = resp.data.array
-          console.log(_this.dmcoursetype)
-        }
-      })
-      this.course = {
+      this.dialogTitle = '编辑培养专业信息'
+      this.planMajorinfo = {
         id: item.id,
-        name: item.name,
-        englishName: item.englishName,
-        code: item.code,
-        type: item.type
+        planId: item.planId,
+        introduction: item.introduction,
+        limitYear: item.limitYear,
+        degree: item.degree,
+        minCredit: item.minCredit,
+        requirementDescription: item.requirementDescription
       }
       this.dialogFormVisible = true
     },
@@ -286,8 +310,8 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           let _this = this
-          if (this.course.id) {
-            this.putRequest('/course/entity', this.course).then(resp => {
+          if (this.planMajorinfo.id) {
+            this.putRequest('/pmi/entity', this.planMajorinfo).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -295,7 +319,7 @@ export default {
               }
             })
           } else {
-            this.postRequest('/course/entity', this.course).then(resp => {
+            this.postRequest('/pmi/entity', this.planMajorinfo).then(resp => {
               if (resp && resp.status === 200) {
                 this.$message({type: resp.data.status, message: resp.data.msg})
                 _this.closeSaveOrUpdateView()
@@ -310,12 +334,12 @@ export default {
     },
     deleteEntity (item) {
       let _this = this
-      this.$confirm('此操作将删除该专业, 是否继续?', '提示', {
+      this.$confirm('此操作将删除该培养方案, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.putRequest('/course/statue/' + item.id).then(resp => {
+        this.putRequest('/pmi/statue/' + item.id).then(resp => {
           if (resp && resp.status === 200) {
             _this.$message({
               type: resp.data.status,
@@ -336,22 +360,23 @@ export default {
       this.dialogFormVisible = false
     },
     emptyEntity () {
-      this.dmcoursetype = []
-      this.course = {}
-      this.course = {
-        name: '',
-        englishName: '',
-        code: '',
-        type: ''
+      this.planMajorinfo = {}
+      this.planMajorinfo = {
+        planId: '',
+        introduction: '',
+        limitYear: '',
+        degree: '',
+        minCredit: '',
+        requirementDescription: ''
       }
     },
     handleCascaderChange (item) {
       if (item.length === 0) {
-        this.course.type = ''
+        this.planMajorinfo.type = ''
         return
       }
       let id = item[item.length - 1]
-      this.course.type = id
+      this.planMajorinfo.type = id
     },
     handleSizeChange (val) {
       console.log(`每页 ${val} 条`)
